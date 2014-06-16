@@ -12,14 +12,14 @@ namespace ExpressionLab
     //{
     //    static void Main(string[] args)
     //    {
-    //        //Basic();
-    //        //BasicByTree();
+    //       // Basic();
+    //     //  BasicByTree();
     //        //BasicConstant();
     //        //BasicLessThan();
     //        //BasicLabelTarget();
-    //        //BasicBlock();
+    //        BasicBlock();
     //        //BasicParseLamba();
-    //        BasicExcutePower();
+    //        //BasicExcutePower();
     //        Console.Read();
     //    }
 
@@ -27,19 +27,23 @@ namespace ExpressionLab
     //    {
     //        Console.WriteLine("");
     //        Console.WriteLine("Basic");
-    //        Expression<Func<int, int>> basic = n => n * n;
-    //        Console.WriteLine(basic.Body);
-    //        Console.WriteLine(basic.Parameters[0]);
-    //        Console.WriteLine(basic.NodeType);
-    //        Console.WriteLine(basic.ReturnType);
-    //        Console.WriteLine(basic.Compile()(10));
+    //        Expression<Func<int, bool>> lambda = num => num > 10;
+    //        Console.WriteLine(lambda.Body);//運算式主體 n*n
+    //        Console.WriteLine(lambda.Parameters[0]);//參數
+    //        Console.WriteLine(lambda.NodeType);//節點型別
+    //        Console.WriteLine(lambda.ReturnType);//回傳型別
+    //        Console.WriteLine(lambda.Compile()(10));//建置後執行
     //    }
     //    private static void BasicByTree()
     //    {
     //        Console.WriteLine("");
     //        Console.WriteLine("BasicByTree");
-    //        ParameterExpression pe = Expression.Parameter(typeof(int), "n");
-    //        Expression<Func<int, int>> expr = Expression<Func<int, int>>.Lambda<Func<int, int>>(Expression.Multiply(pe, pe), new ParameterExpression[] { pe });
+    //        ParameterExpression num = Expression.Parameter(typeof(int), "n");
+    //        Expression<Func<int, int>> expr =
+    //            Expression<Func<int, int>>.Lambda<Func<int, int>>(//建立Lambda方法
+    //                Expression.Multiply(num, num)//建立一個num*num的主體
+    //                , new ParameterExpression[] { num }//此主體方法為傳入一個num參數
+    //              );
     //        Console.WriteLine(expr.Body);
     //        Console.WriteLine(expr.Parameters[0]);
     //        Console.WriteLine(expr.NodeType);
@@ -50,9 +54,9 @@ namespace ExpressionLab
     //    {
     //        Console.WriteLine("");
     //        Console.WriteLine("BasicConstant");
-    //        ParameterExpression pe = Expression.Parameter(typeof(int), "n");
+    //        ParameterExpression numPar = Expression.Parameter(typeof(int), "n");
     //        ConstantExpression five = Expression.Constant(5);
-    //        Expression<Func<int, bool>> expr = Expression<Func<int, bool>>.Lambda<Func<int, bool>>(Expression.Equal(pe, five), new ParameterExpression[] { pe });
+    //        Expression<Func<int, bool>> expr = Expression<Func<int, bool>>.Lambda<Func<int, bool>>(Expression.Equal(numPar, five), new ParameterExpression[] { numPar });
     //        Console.WriteLine(expr.Body);
     //        Console.WriteLine(expr.Parameters[0]);
     //        Console.WriteLine(expr.NodeType);
@@ -100,17 +104,18 @@ namespace ExpressionLab
     //        ParameterExpression result = Expression.Parameter(typeof(int), "result");
     //        LabelTarget label = Expression.Label(typeof(int));
     //        BlockExpression block = Expression.Block(//建立方法區塊
-    //            new[] { result },//指定方法的參數
+    //            new[] { result },//指定方法的參數為result
     //            Expression.Assign(result, Expression.Constant(1)),//設定變數result=1
-    //            Expression.Loop(
-    //                 Expression.IfThenElse(
-    //                    Expression.GreaterThan(value, Expression.Constant(1)),
-    //                    Expression.MultiplyAssign(result, Expression.PostDecrementAssign(value)),
-    //                   Expression.Break(label, result)
-    //            ), label
+    //            Expression.Loop(//建立Loop迴圈區塊
+    //                 Expression.IfThenElse(//建立判斷式區塊
+    //                        Expression.GreaterThan(value, Expression.Constant(1)),//條件:參數大於5
+    //                        Expression.MultiplyAssign(result, Expression.PostDecrementAssign(value)),//true:執行乘法運算並將結果給result 例:result*=value
+    //                        Expression.Break(label, result)//false:跳離Loop並到下方的label
+    //                        )
+    //                        , label//指定標籤，讓上方的Break跳到此行用
     //            )
     //            );
-    //        var lamba = Expression.Lambda<Func<int, int>>(block, value);
+    //        var lamba = Expression.Lambda<Func<int, int>>(block, value);//將方法區塊指定成Lamdba運算式
     //        int factorial = lamba.Compile()(5);
     //        Console.WriteLine(lamba);
     //        Console.WriteLine(factorial);
@@ -137,94 +142,92 @@ namespace ExpressionLab
     #endregion
 
     #region Second
-    //class SecondProgram
-    //{
-    //    //示範如何將運算式為&&抽換成||
-    //    //http://msdn.microsoft.com/zh-tw/library/bb546136.aspx
-    //    public class AndAlsoModifier : ExpressionVisitor
-    //    {
-    //        public Expression Modify(Expression expression)
-    //        {
-    //            return Visit(expression);
-    //        }
+    class SecondProgram
+    {
+        //示範如何將運算式為&&抽換成||
+        //http://msdn.microsoft.com/zh-tw/library/bb546136.aspx
+        public class AndAlsoModifier : ExpressionVisitor
+        {
+            public Expression Modify(Expression expression)
+            {
+                return Visit(expression);
+            }
 
-    //        protected override Expression VisitBinary(BinaryExpression node)
-    //        {
-    //            if (node.NodeType == ExpressionType.AndAlso)
-    //            {
-    //                Expression left = this.Visit(node.Left);//此為取得造訪方法，若此覆寫的方法有針對Left/Right處理，則叫用此方法會處理到
-    //                Expression right = this.Visit(node.Right);
-    //                return Expression.MakeBinary(ExpressionType.OrElse, left, right, node.IsLiftedToNull, node.Method);
-    //            }
+            protected override Expression VisitBinary(BinaryExpression node)
+            {
+                if (node.NodeType == ExpressionType.AndAlso)
+                {
+                    Expression left = this.Visit(node.Left);//以遞迴方式繼續巡覽
+                    Expression right = this.Visit(node.Right);
+                    return Expression.MakeBinary(ExpressionType.OrElse, left, right, node.IsLiftedToNull, node.Method);
+                }
 
-    //            return base.VisitBinary(node);
-    //        }
+                return base.VisitBinary(node);
+            }
 
-    //    }
+        }
 
-    //    static void Main(string[] args)
-    //    {
-    //        Expression<Func<string, bool>> expr = name => name.Length > 10 && name.StartsWith("G");
-    //        Console.WriteLine(expr);
-
-    //        AndAlsoModifier treeModifier = new AndAlsoModifier();
-    //        Expression modifiedExpr = treeModifier.Modify(expr);
-    //        Console.WriteLine(modifiedExpr);
-
-    //        Console.Read();
-    //    }
-    //}
+        static void Main(string[] args)
+        {
+            Expression<Func<string, bool>> expr = name => name.Length > 10 && name.StartsWith("G");
+            AndAlsoModifier treeModifier = new AndAlsoModifier();
+            Expression modifiedExpr = treeModifier.Modify(expr);
+            Console.WriteLine("修改前:" + expr);
+            Console.WriteLine("修改後:" + modifiedExpr);
+            Console.Read();
+        }
+    }
     #endregion
 
     #region DynamicQuery
     //http://msdn.microsoft.com/zh-tw/library/bb882637.aspx
-    class DynamicQueryProgram
-    {
-        static void Main(string[] args)
-        {
-            string[] companies = { "Consolidated Messenger", "Alpine Ski House", "Southridge Video", "City Power & Light",
-                               "Coho Winery", "Wide World Importers", "Graphic Design Institute", "Adventure Works",
-                               "Humongous Insurance", "Woodgrove Bank", "Margie's Travel", "Northwind Traders",
-                               "Blue Yonder Airlines", "Trey Research", "The Phone Company",
-                               "Wingtip Toys", "Lucerne Publishing", "Fourth Coffee" };
-            IQueryable<string> queryableData = companies.AsQueryable();
-            ParameterExpression pe = Expression.Parameter(typeof(string), "company");
-            // ***** Where(company => (company.ToLower() == "coho winery" || company.Length > 16)) *****
-            // Create an expression tree that represents the expression 'company.ToLower() == "coho winery"'.
-            Expression left = Expression.Call(pe, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
-            Expression right = Expression.Constant("coho winery");
-            Expression e1 = Expression.Equal(left, right);
+    //class DynamicQueryProgram
+    //{
+    //    static void Main(string[] args)
+    //    {
+    //        string[] companies = { "Consolidated Messenger", "Alpine Ski House", "Southridge Video", "City Power & Light",
+    //                           "Coho Winery", "Wide World Importers", "Graphic Design Institute", "Adventure Works",
+    //                           "Humongous Insurance", "Woodgrove Bank", "Margie's Travel", "Northwind Traders",
+    //                           "Blue Yonder Airlines", "Trey Research", "The Phone Company",
+    //                           "Wingtip Toys", "Lucerne Publishing", "Fourth Coffee" };
+    //        IQueryable<string> queryableData = companies.AsQueryable();
+    //        ParameterExpression pe = Expression.Parameter(typeof(string), "company");
+    //        // ***** Where(company => (company.ToLower() == "coho winery" || company.Length > 16)) *****
+    //        // Create an expression tree that represents the expression 'company.ToLower() == "coho winery"'.
+    //        Expression left = Expression.Call(pe, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
+    //        Expression right = Expression.Constant("coho winery");
+    //        Expression e1 = Expression.Equal(left, right);
 
-            left = Expression.Property(pe, typeof(string).GetProperty("Length"));
-            right = Expression.Constant(16);
-            Expression e2 = Expression.GreaterThan(left, right);
+    //        left = Expression.Property(pe, typeof(string).GetProperty("Length"));
+    //        right = Expression.Constant(16);
+    //        Expression e2 = Expression.GreaterThan(left, right);
 
-            // Combine the expression trees to create an expression tree that represents the
-            // expression '(company.ToLower() == "coho winery" || company.Length > 16)'.
-            Expression precidateBody = Expression.OrElse(e1, e2);
+    //        // Combine the expression trees to create an expression tree that represents the
+    //        // expression '(company.ToLower() == "coho winery" || company.Length > 16)'.
+    //        Expression precidateBody = Expression.OrElse(e1, e2);
 
-            // Create an expression tree that represents the expression
-            // 'queryableData.Where(company => (company.ToLower() == "coho winery" || company.Length > 16))'
-            MethodCallExpression whereCallExpression = Expression.Call(typeof(Queryable), "Where", new Type[] { queryableData.ElementType }
-                , queryableData.Expression
-                , Expression.Lambda<Func<string, bool>>(precidateBody, new ParameterExpression[] { pe }));
-            //End Where
+    //        // Create an expression tree that represents the expression
+    //        // 'queryableData.Where(company => (company.ToLower() == "coho winery" || company.Length > 16))'
+    //        MethodCallExpression whereCallExpression = Expression.Call(typeof(Queryable), "Where", new Type[] { queryableData.ElementType }
+    //            , queryableData.Expression
+    //            , Expression.Lambda<Func<string, bool>>(precidateBody, new ParameterExpression[] { pe }));
+    //        //End Where
 
-            // ***** OrderBy(company => company) *****
-            // Create an expression tree that represents the expression
-            // 'whereCallExpression.OrderBy(company => company)'
-            MethodCallExpression orderByCallExpression = Expression.Call(typeof(Queryable), "OrderBy", new Type[] { queryableData.ElementType, queryableData.ElementType }
-                , whereCallExpression
-                , Expression.Lambda<Func<string, string>>(pe, new ParameterExpression[] { pe }));
-            // ***** End OrderBy *****
-            // Create an executable query from the expression tree.
-            IQueryable<string> results = queryableData.Provider.CreateQuery<string>(orderByCallExpression);
+    //        // ***** OrderBy(company => company) *****
+    //        // Create an expression tree that represents the expression
+    //        // 'whereCallExpression.OrderBy(company => company)'
+    //        MethodCallExpression orderByCallExpression = Expression.Call(typeof(Queryable), "OrderBy", new Type[] { queryableData.ElementType, queryableData.ElementType }
+    //            , whereCallExpression
+    //            , Expression.Lambda<Func<string, string>>(pe, new ParameterExpression[] { pe }));
+    //        // ***** End OrderBy *****
+    //        // Create an executable query from the expression tree.
+    //        IQueryable<string> results = queryableData.Provider.CreateQuery<string>(orderByCallExpression);
 
-            foreach (string company in results)
-                Console.WriteLine(company);
-            Console.Read();
-        }
-    }
+    //        foreach (string company in results)
+    //            Console.WriteLine(company);
+    //        Console.Read();
+    //    }
+    //}
     #endregion
 
 }
