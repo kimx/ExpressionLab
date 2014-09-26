@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -184,7 +185,8 @@ namespace ExpressionLab
     {
         static void Main(string[] args)
         {
-            DynamicQuery();
+            //DynamicQuery();
+            DynamicColumn();
             Console.Read();
         }
         private static void DynamicQuery()
@@ -198,6 +200,16 @@ namespace ExpressionLab
             foreach (var item in data)
             {
                 Console.WriteLine(item.ProductName);
+            }
+        }
+
+        private static void DynamicColumn()
+        {
+            IQueryable<ProductModel> data = ProductModel.GetDatas();
+            var dynamicResult = SelectDynamicColumns(data, "ProductName", "CategoryName");
+            foreach (var item in dynamicResult)
+            {
+                Console.WriteLine(item.ProductName + "-" + item.CategoryName);
             }
         }
 
@@ -228,7 +240,6 @@ namespace ExpressionLab
             }
 
         }
-
 
 
         private static IQueryable<ProductModel> OrderBy(IQueryable<ProductModel> source, string sortColumn)
@@ -270,6 +281,43 @@ namespace ExpressionLab
                             source.Expression,//來源運算式
                             body);
             var result = (IQueryable<ProductModel>)source.Provider.CreateQuery(whereCallExpression);
+            return result;
+        }
+
+        //http://stackoverflow.com/questions/12701737/expression-to-create-an-instance-with-object-initializer
+        private static IQueryable<ProductTargetModel> SelectDynamicColumns(IQueryable<ProductModel> source, params string[] columns)
+        {
+            //傳入參數 如:m
+            ParameterExpression parSource = Expression.Parameter(source.ElementType, "m");
+            Type targetType = typeof(ProductTargetModel);
+            //目標型別的建構式
+            var ctor = Expression.New(targetType);
+            List<MemberAssignment> assignment = new List<MemberAssignment>();
+            foreach (var column in columns)
+            {
+                //來源屬性
+                var sourceValueProperty = source.ElementType.GetProperty(column);
+                //目標屬性
+                var targetValueProperty = targetType.GetProperty(column);
+                //建立參數與欄位節點 如:m.CategoryName
+                Expression columnExp = Expression.Property(parSource, sourceValueProperty);
+                //建立成員指定節點 如:CategoryName=m.CategoryName
+                var displayValueAssignment = Expression.Bind(targetValueProperty, columnExp);
+                assignment.Add(displayValueAssignment);
+            }
+            //將目標型別的成員初始化 例:new ProductTargetModel(){CategoryName=m.CategoryName,...}
+            var memberInit = Expression.MemberInit(ctor, assignment.ToArray());
+
+            //建立Lamba運算式 例: m => new ProductTargetModel(){CategoryName=m.CategoryName,...}
+            Expression body = Expression.Lambda<Func<ProductModel, ProductTargetModel>>(memberInit, new ParameterExpression[] { parSource });
+            //呼叫Select方法
+            MethodCallExpression whereCallExpression = Expression.Call(
+                            typeof(Queryable),//來源型別
+                            "Select",//指定方法名稱
+                            new Type[] { typeof(ProductModel), typeof(ProductTargetModel) },//body lamba使用到Expression型別，例:pe及回傳型別
+                            source.Expression,//來源運算式
+                            body);
+            var result = (IQueryable<ProductTargetModel>)source.Provider.CreateQuery(whereCallExpression);
             return result;
         }
 
@@ -317,7 +365,23 @@ namespace ExpressionLab
         }
     }
 
+    public class ProductTargetModel
+    {
+        public int ProductId { get; set; }
 
+        public string CategoryName { get; set; }
+
+        public string ProductName { get; set; }
+
+        public int Qty { get; set; }
+
+        public double Price { get; set; }
+
+        public DateTime CreateDate { get; set; }
+
+        public bool OnSaled { get; set; }
+
+    }
 
     //http://msdn.microsoft.com/zh-tw/library/bb882637.aspx
     //class ThirdProgram
@@ -368,5 +432,7 @@ namespace ExpressionLab
     //    }
     //}
     #endregion
+
+    
 
 }
