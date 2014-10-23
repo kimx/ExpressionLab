@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -181,121 +182,273 @@ namespace ExpressionLab
     #endregion
 
     #region DynamicQuery
-    class DynamicQueryProgram
+    //class DynamicQueryProgram
+    //{
+    //    static void Main(string[] args)
+    //    {
+    //        //DynamicQuery();
+    //        DynamicColumn();
+    //        Console.Read();
+    //    }
+    //    private static void DynamicQuery()
+    //    {
+    //        string sortColumn = "ProductName";
+    //        string filterColumn = "CategoryName";
+    //        string filterValue = "HTC";
+    //        IQueryable<ProductModel> data = ProductModel.GetDatas();
+    //        data = OrderBy(data, sortColumn);
+    //        data = Where(data, filterColumn, filterValue);
+    //        foreach (var item in data)
+    //        {
+    //            Console.WriteLine(item.ProductName);
+    //        }
+    //    }
+
+    //    private static void DynamicColumn()
+    //    {
+    //        IQueryable<ProductModel> data = ProductModel.GetDatas();
+    //        var dynamicResult = SelectDynamicColumns(data, "ProductName", "CategoryName");
+    //        foreach (var item in dynamicResult)
+    //        {
+    //            Console.WriteLine(item.ProductName + "-" + item.CategoryName);
+    //        }
+    //    }
+
+    //    private static void TraditionQuery()
+    //    {
+    //        string sortColumn = "ProductName";
+    //        string filterColumn = "CategoryName";
+    //        string filterValue = "HTC";
+    //        IQueryable<ProductModel> data = ProductModel.GetDatas();
+    //        switch (sortColumn)
+    //        {
+    //            case "CategoryName":
+    //                data = data.OrderBy(m => m.CategoryName);
+    //                break;
+    //            case "ProductName":
+    //                data = data.OrderBy(m => m.ProductName);
+    //                break;
+    //        }
+
+    //        switch (filterColumn)
+    //        {
+    //            case "CategoryName":
+    //                data = data.Where(m => m.CategoryName == filterValue);
+    //                break;
+    //            case "ProductName":
+    //                data = data.Where(m => m.ProductName == filterValue);
+    //                break;
+    //        }
+
+    //    }
+
+
+    //    private static IQueryable<ProductModel> OrderBy(IQueryable<ProductModel> source, string sortColumn)
+    //    {
+    //        //傳入參數 如:m
+    //        ParameterExpression pe = Expression.Parameter(source.ElementType, "m");
+    //        //回傳欄位 如:m.ProductName
+    //        Expression sortExp = Expression.Property(pe, typeof(ProductModel).GetProperty(sortColumn));
+    //        //Lamba運算式 如:m=>m.ProductName
+    //        Expression body = Expression.Lambda<Func<ProductModel, string>>(sortExp, new ParameterExpression[] { pe });
+    //        //呼叫OrderBy方法
+    //        MethodCallExpression OrderByCallExpression = Expression.Call(
+    //                        typeof(Queryable),//來源型別
+    //                        "OrderBy",//指定方法名稱
+    //                        new Type[] { typeof(ProductModel), typeof(string) },//body lamba使用到Expression型別，例:sortExp及pe
+    //                        source.Expression,//來源運算式
+    //                        body);
+    //        var result = (IQueryable<ProductModel>)source.Provider.CreateQuery(OrderByCallExpression);
+    //        return result;
+    //    }
+
+    //    private static IQueryable<ProductModel> Where(IQueryable<ProductModel> source, string filterColumn, string filterValue)
+    //    {
+    //        //傳入參數 如:m
+    //        ParameterExpression pe = Expression.Parameter(source.ElementType, "m");
+    //        //回傳欄位 如:m.CategoryName
+    //        Expression filterExp = Expression.Property(pe, typeof(ProductModel).GetProperty(filterColumn));
+    //        //條件值 如:"HTC"
+    //        ConstantExpression valueExp = Expression.Constant(filterValue, typeof(string));
+    //        //等於條件主體 如:m.CategoryName=="HTC"
+    //        Expression predicateBody = Expression.Equal(filterExp, valueExp);
+    //        //Lamba運算式 
+    //        Expression body = Expression.Lambda<Func<ProductModel, bool>>(predicateBody, new ParameterExpression[] { pe });
+    //        //呼叫Where方法
+    //        MethodCallExpression whereCallExpression = Expression.Call(
+    //                        typeof(Queryable),//來源型別
+    //                        "Where",//指定方法名稱
+    //                        new Type[] { typeof(ProductModel) },//body lamba使用到Expression型別，例:pe
+    //                        source.Expression,//來源運算式
+    //                        body);
+    //        var result = (IQueryable<ProductModel>)source.Provider.CreateQuery(whereCallExpression);
+    //        return result;
+    //    }
+
+    //    //http://stackoverflow.com/questions/12701737/expression-to-create-an-instance-with-object-initializer
+    //    private static IQueryable<ProductTargetModel> SelectDynamicColumns(IQueryable<ProductModel> source, params string[] columns)
+    //    {
+    //        //傳入參數 如:m
+    //        ParameterExpression parSource = Expression.Parameter(source.ElementType, "m");
+    //        Type targetType = typeof(ProductTargetModel);
+    //        //目標型別的建構式
+    //        var ctor = Expression.New(targetType);
+    //        List<MemberAssignment> assignment = new List<MemberAssignment>();
+    //        foreach (var column in columns)
+    //        {
+    //            //來源屬性
+    //            var sourceValueProperty = source.ElementType.GetProperty(column);
+    //            //目標屬性
+    //            var targetValueProperty = targetType.GetProperty(column);
+    //            //建立參數與欄位節點 如:m.CategoryName
+    //            Expression columnExp = Expression.Property(parSource, sourceValueProperty);
+    //            //建立成員指定節點 如:CategoryName=m.CategoryName
+    //            var displayValueAssignment = Expression.Bind(targetValueProperty, columnExp);
+    //            assignment.Add(displayValueAssignment);
+    //        }
+    //        //將目標型別的成員初始化 例:new ProductTargetModel(){CategoryName=m.CategoryName,...}
+    //        var memberInit = Expression.MemberInit(ctor, assignment.ToArray());
+
+    //        //建立Lamba運算式 例: m => new ProductTargetModel(){CategoryName=m.CategoryName,...}
+    //        Expression body = Expression.Lambda<Func<ProductModel, ProductTargetModel>>(memberInit, new ParameterExpression[] { parSource });
+    //        //呼叫Select方法
+    //        MethodCallExpression whereCallExpression = Expression.Call(
+    //                        typeof(Queryable),//來源型別
+    //                        "Select",//指定方法名稱
+    //                        new Type[] { typeof(ProductModel), typeof(ProductTargetModel) },//body lamba使用到Expression型別，例:pe及回傳型別
+    //                        source.Expression,//來源運算式
+    //                        body);
+    //        var result = (IQueryable<ProductTargetModel>)source.Provider.CreateQuery(whereCallExpression);
+    //        return result;
+    //    }
+
+
+    //}
+
+    //public class ProductModel
+    //{
+    //    public int ProductId { get; set; }
+
+    //    public string CategoryName { get; set; }
+
+    //    public string ProductName { get; set; }
+
+    //    public int Qty { get; set; }
+
+    //    public double Price { get; set; }
+
+    //    public DateTime CreateDate { get; set; }
+
+    //    public bool OnSaled { get; set; }
+
+    //    public static IQueryable<ProductModel> GetDatas()
+    //    {
+
+    //        List<ProductModel> data = new List<ProductModel>();
+    //        data.Add(new ProductModel { CategoryName = "Apple", ProductId = 1, ProductName = "iPhone3", Price = 5000, Qty = 5, CreateDate = new DateTime(2009, 1, 1) });
+    //        data.Add(new ProductModel { CategoryName = "Apple", ProductId = 2, ProductName = "iPhone4", Price = 10000, Qty = 6, CreateDate = new DateTime(2010, 3, 1) });
+    //        data.Add(new ProductModel { CategoryName = "Apple", ProductId = 3, ProductName = "iPhone4s", Price = 15000, Qty = 15, CreateDate = new DateTime(2011, 4, 1) });
+    //        data.Add(new ProductModel { CategoryName = "Apple", ProductId = 4, ProductName = "iPhone5", Price = 20000, Qty = 25, CreateDate = new DateTime(2012, 5, 1), OnSaled = true });
+    //        data.Add(new ProductModel { CategoryName = "Apple", ProductId = 5, ProductName = "iPhone5s", Price = 25000, Qty = 5, CreateDate = new DateTime(2013, 6, 8), OnSaled = true });
+
+    //        data.Add(new ProductModel { CategoryName = "HTC", ProductId = 6, ProductName = "Diamond", Price = 5000, Qty = 5, CreateDate = new DateTime(2009, 1, 1) });
+    //        data.Add(new ProductModel { CategoryName = "HTC", ProductId = 7, ProductName = "Titan", Price = 6000, Qty = 25, CreateDate = new DateTime(2010, 1, 13) });
+    //        data.Add(new ProductModel { CategoryName = "HTC", ProductId = 8, ProductName = "One", Price = 7000, Qty = 35, CreateDate = new DateTime(2011, 3, 12) });
+    //        data.Add(new ProductModel { CategoryName = "HTC", ProductId = 9, ProductName = "New One", Price = 15000, Qty = 45, CreateDate = new DateTime(2012, 11, 1), OnSaled = true });
+    //        data.Add(new ProductModel { CategoryName = "HTC", ProductId = 10, ProductName = "Flyer", Price = 3000, Qty = 55, CreateDate = new DateTime(2013, 1, 1), OnSaled = true });
+
+    //        data.Add(new ProductModel { CategoryName = "Nokia", ProductId = 11, ProductName = "Lumia610", Price = 5000, Qty = 5, CreateDate = new DateTime(2009, 1, 1) });
+    //        data.Add(new ProductModel { CategoryName = "Nokia", ProductId = 12, ProductName = "Lumia710", Price = 7000, Qty = 45, CreateDate = new DateTime(2010, 12, 1) });
+    //        data.Add(new ProductModel { CategoryName = "Nokia", ProductId = 13, ProductName = "Lumia810", Price = 8000, Qty = 35, CreateDate = new DateTime(2011, 11, 30) });
+    //        data.Add(new ProductModel { CategoryName = "Nokia", ProductId = 14, ProductName = "Lumia920", Price = 13000, Qty = 25, CreateDate = new DateTime(2012, 10, 12) });
+    //        data.Add(new ProductModel { CategoryName = "Nokia", ProductId = 15, ProductName = "Lumia1500", Price = 18000, Qty = 5, CreateDate = new DateTime(2013, 9, 12), OnSaled = true });
+
+    //        return data.AsQueryable();
+    //    }
+    //}
+
+    //public class ProductTargetModel
+    //{
+    //    public int ProductId { get; set; }
+
+    //    public string CategoryName { get; set; }
+
+    //    public string ProductName { get; set; }
+
+    //    public int Qty { get; set; }
+
+    //    public double Price { get; set; }
+
+    //    public DateTime CreateDate { get; set; }
+
+    //    public bool OnSaled { get; set; }
+
+    //}
+
+    #endregion
+
+    #region DynamicQueryProxy
+    /*
+     Reference
+     * http://www.cnblogs.com/why520crazy/articles/2781596.html
+     * http://geekswithblogs.net/abhijeetp/archive/2010/04/04/a-simple-dynamic-proxy.aspx
+     * http://www.codeproject.com/Articles/19513/Dynamic-But-Fast-The-Tale-of-Three-Monkeys-A-Wolf
+     */
+    class DynamicQueryByProxyProgram
     {
         static void Main(string[] args)
         {
-            //DynamicQuery();
-            DynamicColumn();
+            DbContextMock db = new DbContextMock();
+            IQueryable<ProductInfo> result = from p in db.Product
+                                             join c in db.Category
+                                                 on p.CategoryId equals c.CategoryId
+                                             select new ProductInfo
+                                             {
+                                                 CategoryName = c.CategoryName,
+                                                 CreateDate = p.CreateDate,
+                                                 OnSaled = p.OnSaled,
+                                                 Price = p.Price,
+                                                 ProductId = p.ProductId,
+                                                 ProductName = p.ProductName,
+                                                 Qty = p.Qty,
+
+                                             };
+
+            result = result.SelectDynamicProxy("CategoryName", "ProductName");
+            foreach (var item in result)
+            {
+                ProductInfo p = (ProductInfo)item;
+                Console.WriteLine("CategoryName:" + item.CategoryName);
+                Console.WriteLine("ProductName:" + item.ProductName);
+            }
+
             Console.Read();
         }
-        private static void DynamicQuery()
+
+    }
+
+    public static class DynamicQueryExtension
+    {
+
+        /// <summary>
+        /// Select動態欄位回傳代理類別
+        /// </summary>
+        /// <typeparam name="SourceTarget"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="columns"></param>
+        /// <returns></returns>
+        public static IQueryable<SourceTarget> SelectDynamicProxy<SourceTarget>(this IQueryable<SourceTarget> source, params string[] columns)
         {
-            string sortColumn = "ProductName";
-            string filterColumn = "CategoryName";
-            string filterValue = "HTC";
-            IQueryable<ProductModel> data = ProductModel.GetDatas();
-            data = OrderBy(data, sortColumn);
-            data = Where(data, filterColumn, filterValue);
-            foreach (var item in data)
-            {
-                Console.WriteLine(item.ProductName);
-            }
-        }
-
-        private static void DynamicColumn()
-        {
-            IQueryable<ProductModel> data = ProductModel.GetDatas();
-            var dynamicResult = SelectDynamicColumns(data, "ProductName", "CategoryName");
-            foreach (var item in dynamicResult)
-            {
-                Console.WriteLine(item.ProductName + "-" + item.CategoryName);
-            }
-        }
-
-        private static void TraditionQuery()
-        {
-            string sortColumn = "ProductName";
-            string filterColumn = "CategoryName";
-            string filterValue = "HTC";
-            IQueryable<ProductModel> data = ProductModel.GetDatas();
-            switch (sortColumn)
-            {
-                case "CategoryName":
-                    data = data.OrderBy(m => m.CategoryName);
-                    break;
-                case "ProductName":
-                    data = data.OrderBy(m => m.ProductName);
-                    break;
-            }
-
-            switch (filterColumn)
-            {
-                case "CategoryName":
-                    data = data.Where(m => m.CategoryName == filterValue);
-                    break;
-                case "ProductName":
-                    data = data.Where(m => m.ProductName == filterValue);
-                    break;
-            }
-
-        }
-
-
-        private static IQueryable<ProductModel> OrderBy(IQueryable<ProductModel> source, string sortColumn)
-        {
-            //傳入參數 如:m
-            ParameterExpression pe = Expression.Parameter(source.ElementType, "m");
-            //回傳欄位 如:m.ProductName
-            Expression sortExp = Expression.Property(pe, typeof(ProductModel).GetProperty(sortColumn));
-            //Lamba運算式 如:m=>m.ProductName
-            Expression body = Expression.Lambda<Func<ProductModel, string>>(sortExp, new ParameterExpression[] { pe });
-            //呼叫OrderBy方法
-            MethodCallExpression OrderByCallExpression = Expression.Call(
-                            typeof(Queryable),//來源型別
-                            "OrderBy",//指定方法名稱
-                            new Type[] { typeof(ProductModel), typeof(string) },//body lamba使用到Expression型別，例:sortExp及pe
-                            source.Expression,//來源運算式
-                            body);
-            var result = (IQueryable<ProductModel>)source.Provider.CreateQuery(OrderByCallExpression);
-            return result;
-        }
-
-        private static IQueryable<ProductModel> Where(IQueryable<ProductModel> source, string filterColumn, string filterValue)
-        {
-            //傳入參數 如:m
-            ParameterExpression pe = Expression.Parameter(source.ElementType, "m");
-            //回傳欄位 如:m.CategoryName
-            Expression filterExp = Expression.Property(pe, typeof(ProductModel).GetProperty(filterColumn));
-            //條件值 如:"HTC"
-            ConstantExpression valueExp = Expression.Constant(filterValue, typeof(string));
-            //等於條件主體 如:m.CategoryName=="HTC"
-            Expression predicateBody = Expression.Equal(filterExp, valueExp);
-            //Lamba運算式 
-            Expression body = Expression.Lambda<Func<ProductModel, bool>>(predicateBody, new ParameterExpression[] { pe });
-            //呼叫Where方法
-            MethodCallExpression whereCallExpression = Expression.Call(
-                            typeof(Queryable),//來源型別
-                            "Where",//指定方法名稱
-                            new Type[] { typeof(ProductModel) },//body lamba使用到Expression型別，例:pe
-                            source.Expression,//來源運算式
-                            body);
-            var result = (IQueryable<ProductModel>)source.Provider.CreateQuery(whereCallExpression);
-            return result;
-        }
-
-        //http://stackoverflow.com/questions/12701737/expression-to-create-an-instance-with-object-initializer
-        private static IQueryable<ProductTargetModel> SelectDynamicColumns(IQueryable<ProductModel> source, params string[] columns)
-        {
+            //建立代理類別
+            var proxy = DynamicProxyGenerator.CreateDynamicProxy<SourceTarget>();
             //傳入參數 如:m
             ParameterExpression parSource = Expression.Parameter(source.ElementType, "m");
-            Type targetType = typeof(ProductTargetModel);
+            Type targetType = proxy.GetType();
             //目標型別的建構式
             var ctor = Expression.New(targetType);
             List<MemberAssignment> assignment = new List<MemberAssignment>();
             foreach (var column in columns)
-            {
-                //來源屬性
+            {  //來源屬性
                 var sourceValueProperty = source.ElementType.GetProperty(column);
                 //目標屬性
                 var targetValueProperty = targetType.GetProperty(column);
@@ -307,27 +460,108 @@ namespace ExpressionLab
             }
             //將目標型別的成員初始化 例:new ProductTargetModel(){CategoryName=m.CategoryName,...}
             var memberInit = Expression.MemberInit(ctor, assignment.ToArray());
-
             //建立Lamba運算式 例: m => new ProductTargetModel(){CategoryName=m.CategoryName,...}
-            Expression body = Expression.Lambda<Func<ProductModel, ProductTargetModel>>(memberInit, new ParameterExpression[] { parSource });
+            Expression body = Expression.Lambda<Func<SourceTarget, SourceTarget>>(memberInit, new ParameterExpression[] { parSource });
             //呼叫Select方法
             MethodCallExpression whereCallExpression = Expression.Call(
                             typeof(Queryable),//來源型別
                             "Select",//指定方法名稱
-                            new Type[] { typeof(ProductModel), typeof(ProductTargetModel) },//body lamba使用到Expression型別，例:pe及回傳型別
+                            new Type[] { source.ElementType, source.ElementType },//body lamba使用到Expression型別，例:pe及回傳型別
                             source.Expression,//來源運算式
                             body);
-            var result = (IQueryable<ProductTargetModel>)source.Provider.CreateQuery(whereCallExpression);
+            var result = (IQueryable<SourceTarget>)source.Provider.CreateQuery(whereCallExpression);
             return result;
         }
 
     }
+    internal class DynamicProxyGenerator
+    {
+        /// <summary>
+        ///動態建立代理類別
+        ///此方法只建立一個繼承T的代理類別，不作任何欄位、屬性、方法的修改及擴充
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="isSavaDynamicModule"></param>
+        /// <returns></returns>
+        public static T CreateDynamicProxy<T>()
+        {
+            Type typeNeedProxy = typeof(T);
+            //定義動態組件
+            AssemblyName assembly = new AssemblyName("DynamicAssembly");
+            AssemblyBuilderAccess assemblyBuilderAccess = AssemblyBuilderAccess.Run;
+            AssemblyBuilder assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assembly, assemblyBuilderAccess);
+            //定義動態模組
+            ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule("DynamicAssemblyModule");
 
-    public class ProductModel
+            //定義代理類別建立者
+            string proxyClassName = string.Format("{0}Proxy", typeNeedProxy.Name);
+            TypeBuilder typeBuilderProxy = moduleBuilder.DefineType(proxyClassName, TypeAttributes.Public, typeNeedProxy);
+            //定義建構式-開始,此段不加也可以,此段給另外在建構式加入其他邏輯用
+            ConstructorBuilder constructorBuilder = typeBuilderProxy.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, new Type[] { });
+            ILGenerator ilgCtor = constructorBuilder.GetILGenerator();
+            ilgCtor.Emit(OpCodes.Ret);//返回
+            //定義建構式-結束
+
+            //使用代理類別建立者建立代理類別的型別
+            Type proxyClassType = typeBuilderProxy.CreateType();
+            //建立代理類別
+            var instance = Activator.CreateInstance(proxyClassType);
+            return (T)instance;
+        }
+
+
+    }
+
+
+    public class DbContextMock
+    {
+        public IQueryable<ProductEntity> Product { get; set; }
+        public IQueryable<CategoryEntity> Category { get; set; }
+
+        public DbContextMock()
+        {
+            List<ProductEntity> productList = new List<ProductEntity>();
+            productList.Add(new ProductEntity { CategoryId = 1, ProductId = 1, ProductName = "iPhone3", Price = 5000, Qty = 5, CreateDate = new DateTime(2009, 1, 1) });
+            productList.Add(new ProductEntity { CategoryId = 1, ProductId = 2, ProductName = "iPhone4", Price = 10000, Qty = 6, CreateDate = new DateTime(2010, 3, 1) });
+            productList.Add(new ProductEntity { CategoryId = 1, ProductId = 3, ProductName = "iPhone4s", Price = 15000, Qty = 15, CreateDate = new DateTime(2011, 4, 1) });
+            productList.Add(new ProductEntity { CategoryId = 1, ProductId = 4, ProductName = "iPhone5", Price = 20000, Qty = 25, CreateDate = new DateTime(2012, 5, 1), OnSaled = true });
+            productList.Add(new ProductEntity { CategoryId = 1, ProductId = 5, ProductName = "iPhone5s", Price = 25000, Qty = 5, CreateDate = new DateTime(2013, 6, 8), OnSaled = true });
+
+            productList.Add(new ProductEntity { CategoryId = 2, ProductId = 6, ProductName = "Diamond", Price = 5000, Qty = 5, CreateDate = new DateTime(2009, 1, 1) });
+            productList.Add(new ProductEntity { CategoryId = 2, ProductId = 7, ProductName = "Titan", Price = 6000, Qty = 25, CreateDate = new DateTime(2010, 1, 13) });
+            productList.Add(new ProductEntity { CategoryId = 2, ProductId = 8, ProductName = "One", Price = 7000, Qty = 35, CreateDate = new DateTime(2011, 3, 12) });
+            productList.Add(new ProductEntity { CategoryId = 2, ProductId = 9, ProductName = "New One", Price = 15000, Qty = 45, CreateDate = new DateTime(2012, 11, 1), OnSaled = true });
+            productList.Add(new ProductEntity { CategoryId = 2, ProductId = 10, ProductName = "Flyer", Price = 3000, Qty = 55, CreateDate = new DateTime(2013, 1, 1), OnSaled = true });
+
+            productList.Add(new ProductEntity { CategoryId = 3, ProductId = 11, ProductName = "Lumia610", Price = 5000, Qty = 5, CreateDate = new DateTime(2009, 1, 1) });
+            productList.Add(new ProductEntity { CategoryId = 3, ProductId = 12, ProductName = "Lumia710", Price = 7000, Qty = 45, CreateDate = new DateTime(2010, 12, 1) });
+            productList.Add(new ProductEntity { CategoryId = 3, ProductId = 13, ProductName = "Lumia810", Price = 8000, Qty = 35, CreateDate = new DateTime(2011, 11, 30) });
+            productList.Add(new ProductEntity { CategoryId = 3, ProductId = 14, ProductName = "Lumia920", Price = 13000, Qty = 25, CreateDate = new DateTime(2012, 10, 12) });
+            productList.Add(new ProductEntity { CategoryId = 3, ProductId = 15, ProductName = "Lumia1500", Price = 18000, Qty = 5, CreateDate = new DateTime(2013, 9, 12), OnSaled = true });
+            Product = productList.AsQueryable();
+
+            List<CategoryEntity> categoryList = new List<CategoryEntity>();
+            categoryList.Add(new CategoryEntity { CategoryId = 1, CategoryName = "Apple" });
+            categoryList.Add(new CategoryEntity { CategoryId = 2, CategoryName = "HTC" });
+            categoryList.Add(new CategoryEntity { CategoryId = 3, CategoryName = "Nokia" });
+            Category = categoryList.AsQueryable();
+        }
+    }
+
+    public class CategoryEntity
+    {
+        public int CategoryId { get; set; }
+
+        public string CategoryName { get; set; }
+
+
+    }
+
+    public class ProductEntity
     {
         public int ProductId { get; set; }
 
-        public string CategoryName { get; set; }
+        public int CategoryId { get; set; }
 
         public string ProductName { get; set; }
 
@@ -339,33 +573,33 @@ namespace ExpressionLab
 
         public bool OnSaled { get; set; }
 
-        public static IQueryable<ProductModel> GetDatas()
+        public static IQueryable<ProductEntity> GetDatas()
         {
 
-            List<ProductModel> data = new List<ProductModel>();
-            data.Add(new ProductModel { CategoryName = "Apple", ProductId = 1, ProductName = "iPhone3", Price = 5000, Qty = 5, CreateDate = new DateTime(2009, 1, 1) });
-            data.Add(new ProductModel { CategoryName = "Apple", ProductId = 2, ProductName = "iPhone4", Price = 10000, Qty = 6, CreateDate = new DateTime(2010, 3, 1) });
-            data.Add(new ProductModel { CategoryName = "Apple", ProductId = 3, ProductName = "iPhone4s", Price = 15000, Qty = 15, CreateDate = new DateTime(2011, 4, 1) });
-            data.Add(new ProductModel { CategoryName = "Apple", ProductId = 4, ProductName = "iPhone5", Price = 20000, Qty = 25, CreateDate = new DateTime(2012, 5, 1), OnSaled = true });
-            data.Add(new ProductModel { CategoryName = "Apple", ProductId = 5, ProductName = "iPhone5s", Price = 25000, Qty = 5, CreateDate = new DateTime(2013, 6, 8), OnSaled = true });
+            List<ProductEntity> data = new List<ProductEntity>();
+            data.Add(new ProductEntity { CategoryId = 1, ProductId = 1, ProductName = "iPhone3", Price = 5000, Qty = 5, CreateDate = new DateTime(2009, 1, 1) });
+            data.Add(new ProductEntity { CategoryId = 1, ProductId = 2, ProductName = "iPhone4", Price = 10000, Qty = 6, CreateDate = new DateTime(2010, 3, 1) });
+            data.Add(new ProductEntity { CategoryId = 1, ProductId = 3, ProductName = "iPhone4s", Price = 15000, Qty = 15, CreateDate = new DateTime(2011, 4, 1) });
+            data.Add(new ProductEntity { CategoryId = 1, ProductId = 4, ProductName = "iPhone5", Price = 20000, Qty = 25, CreateDate = new DateTime(2012, 5, 1), OnSaled = true });
+            data.Add(new ProductEntity { CategoryId = 1, ProductId = 5, ProductName = "iPhone5s", Price = 25000, Qty = 5, CreateDate = new DateTime(2013, 6, 8), OnSaled = true });
 
-            data.Add(new ProductModel { CategoryName = "HTC", ProductId = 6, ProductName = "Diamond", Price = 5000, Qty = 5, CreateDate = new DateTime(2009, 1, 1) });
-            data.Add(new ProductModel { CategoryName = "HTC", ProductId = 7, ProductName = "Titan", Price = 6000, Qty = 25, CreateDate = new DateTime(2010, 1, 13) });
-            data.Add(new ProductModel { CategoryName = "HTC", ProductId = 8, ProductName = "One", Price = 7000, Qty = 35, CreateDate = new DateTime(2011, 3, 12) });
-            data.Add(new ProductModel { CategoryName = "HTC", ProductId = 9, ProductName = "New One", Price = 15000, Qty = 45, CreateDate = new DateTime(2012, 11, 1), OnSaled = true });
-            data.Add(new ProductModel { CategoryName = "HTC", ProductId = 10, ProductName = "Flyer", Price = 3000, Qty = 55, CreateDate = new DateTime(2013, 1, 1), OnSaled = true });
+            data.Add(new ProductEntity { CategoryId = 2, ProductId = 6, ProductName = "Diamond", Price = 5000, Qty = 5, CreateDate = new DateTime(2009, 1, 1) });
+            data.Add(new ProductEntity { CategoryId = 2, ProductId = 7, ProductName = "Titan", Price = 6000, Qty = 25, CreateDate = new DateTime(2010, 1, 13) });
+            data.Add(new ProductEntity { CategoryId = 2, ProductId = 8, ProductName = "One", Price = 7000, Qty = 35, CreateDate = new DateTime(2011, 3, 12) });
+            data.Add(new ProductEntity { CategoryId = 2, ProductId = 9, ProductName = "New One", Price = 15000, Qty = 45, CreateDate = new DateTime(2012, 11, 1), OnSaled = true });
+            data.Add(new ProductEntity { CategoryId = 2, ProductId = 10, ProductName = "Flyer", Price = 3000, Qty = 55, CreateDate = new DateTime(2013, 1, 1), OnSaled = true });
 
-            data.Add(new ProductModel { CategoryName = "Nokia", ProductId = 11, ProductName = "Lumia610", Price = 5000, Qty = 5, CreateDate = new DateTime(2009, 1, 1) });
-            data.Add(new ProductModel { CategoryName = "Nokia", ProductId = 12, ProductName = "Lumia710", Price = 7000, Qty = 45, CreateDate = new DateTime(2010, 12, 1) });
-            data.Add(new ProductModel { CategoryName = "Nokia", ProductId = 13, ProductName = "Lumia810", Price = 8000, Qty = 35, CreateDate = new DateTime(2011, 11, 30) });
-            data.Add(new ProductModel { CategoryName = "Nokia", ProductId = 14, ProductName = "Lumia920", Price = 13000, Qty = 25, CreateDate = new DateTime(2012, 10, 12) });
-            data.Add(new ProductModel { CategoryName = "Nokia", ProductId = 15, ProductName = "Lumia1500", Price = 18000, Qty = 5, CreateDate = new DateTime(2013, 9, 12), OnSaled = true });
+            data.Add(new ProductEntity { CategoryId = 3, ProductId = 11, ProductName = "Lumia610", Price = 5000, Qty = 5, CreateDate = new DateTime(2009, 1, 1) });
+            data.Add(new ProductEntity { CategoryId = 3, ProductId = 12, ProductName = "Lumia710", Price = 7000, Qty = 45, CreateDate = new DateTime(2010, 12, 1) });
+            data.Add(new ProductEntity { CategoryId = 3, ProductId = 13, ProductName = "Lumia810", Price = 8000, Qty = 35, CreateDate = new DateTime(2011, 11, 30) });
+            data.Add(new ProductEntity { CategoryId = 3, ProductId = 14, ProductName = "Lumia920", Price = 13000, Qty = 25, CreateDate = new DateTime(2012, 10, 12) });
+            data.Add(new ProductEntity { CategoryId = 3, ProductId = 15, ProductName = "Lumia1500", Price = 18000, Qty = 5, CreateDate = new DateTime(2013, 9, 12), OnSaled = true });
 
             return data.AsQueryable();
         }
     }
 
-    public class ProductTargetModel
+    public class ProductInfo
     {
         public int ProductId { get; set; }
 
@@ -383,56 +617,8 @@ namespace ExpressionLab
 
     }
 
-    //http://msdn.microsoft.com/zh-tw/library/bb882637.aspx
-    //class ThirdProgram
-    //{
-    //    static void Main(string[] args)
-    //    {
-    //        string[] companies = { "Consolidated Messenger", "Alpine Ski House", "Southridge Video", "City Power & Light",
-    //                           "Coho Winery", "Wide World Importers", "Graphic Design Institute", "Adventure Works",
-    //                           "Humongous Insurance", "Woodgrove Bank", "Margie's Travel", "Northwind Traders",
-    //                           "Blue Yonder Airlines", "Trey Research", "The Phone Company",
-    //                           "Wingtip Toys", "Lucerne Publishing", "Fourth Coffee" };
-    //        IQueryable<string> queryableData = companies.AsQueryable();
-    //        ParameterExpression pe = Expression.Parameter(typeof(string), "company");
-    //        // ***** Where(company => (company.ToLower() == "coho winery" || company.Length > 16)) *****
-    //        // Create an expression tree that represents the expression 'company.ToLower() == "coho winery"'.
-    //        Expression left = Expression.Call(pe, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
-    //        Expression right = Expression.Constant("coho winery");
-    //        Expression e1 = Expression.Equal(left, right);
-
-    //        left = Expression.Property(pe, typeof(string).GetProperty("Length"));
-    //        right = Expression.Constant(16);
-    //        Expression e2 = Expression.GreaterThan(left, right);
-
-    //        // Combine the expression trees to create an expression tree that represents the
-    //        // expression '(company.ToLower() == "coho winery" || company.Length > 16)'.
-    //        Expression precidateBody = Expression.OrElse(e1, e2);
-
-    //        // Create an expression tree that represents the expression
-    //        // 'queryableData.Where(company => (company.ToLower() == "coho winery" || company.Length > 16))'
-    //        MethodCallExpression whereCallExpression = Expression.Call(typeof(Queryable), "Where", new Type[] { queryableData.ElementType }
-    //            , queryableData.Expression
-    //            , Expression.Lambda<Func<string, bool>>(precidateBody, new ParameterExpression[] { pe }));
-    //        //End Where
-
-    //        // ***** OrderBy(company => company) *****
-    //        // Create an expression tree that represents the expression
-    //        // 'whereCallExpression.OrderBy(company => company)'
-    //        MethodCallExpression orderByCallExpression = Expression.Call(typeof(Queryable), "OrderBy", new Type[] { queryableData.ElementType, queryableData.ElementType }
-    //            , whereCallExpression
-    //            , Expression.Lambda<Func<string, string>>(pe, new ParameterExpression[] { pe }));
-    //        // ***** End OrderBy *****
-    //        // Create an executable query from the expression tree.
-    //        IQueryable<string> results = queryableData.Provider.CreateQuery<string>(orderByCallExpression);
-
-    //        foreach (string company in results)
-    //            Console.WriteLine(company);
-    //        Console.Read();
-    //    }
-    //}
     #endregion
 
-    
+
 
 }
