@@ -481,7 +481,6 @@ namespace ExpressionLab
         ///此方法只建立一個繼承T的代理類別，不作任何欄位、屬性、方法的修改及擴充
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="isSavaDynamicModule"></param>
         /// <returns></returns>
         public static T CreateDynamicProxy<T>()
         {
