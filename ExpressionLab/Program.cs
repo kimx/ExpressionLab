@@ -440,7 +440,7 @@ namespace ExpressionLab
         public static IQueryable<SourceTarget> SelectDynamicProxy<SourceTarget>(this IQueryable<SourceTarget> source, params string[] columns)
         {
             //建立代理類別
-            var proxy = DynamicProxyGenerator.CreateDynamicProxy<SourceTarget>();
+            var proxy = DynamicProxyGenerator.CreateDynamicProxy(source.ElementType);
             //傳入參數 如:m
             ParameterExpression parSource = Expression.Parameter(source.ElementType, "m");
             Type targetType = proxy.GetType();
@@ -469,7 +469,7 @@ namespace ExpressionLab
                             new Type[] { source.ElementType, source.ElementType },//body lamba使用到Expression型別，例:pe及回傳型別
                             source.Expression,//來源運算式
                             body);
-            var result = (IQueryable<SourceTarget>)source.Provider.CreateQuery(whereCallExpression);
+            var result = source.Provider.CreateQuery<SourceTarget>(whereCallExpression);
             return result;
         }
 
@@ -482,9 +482,9 @@ namespace ExpressionLab
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T CreateDynamicProxy<T>()
+        public static object CreateDynamicProxy(Type typeNeedProxy)
         {
-            Type typeNeedProxy = typeof(T);
+           
             //定義動態組件
             AssemblyName assembly = new AssemblyName("DynamicAssembly");
             AssemblyBuilderAccess assemblyBuilderAccess = AssemblyBuilderAccess.Run;
@@ -505,7 +505,7 @@ namespace ExpressionLab
             Type proxyClassType = typeBuilderProxy.CreateType();
             //建立代理類別
             var instance = Activator.CreateInstance(proxyClassType);
-            return (T)instance;
+            return instance;
         }
 
 
