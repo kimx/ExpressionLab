@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="UnderBingoModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="BINKIND">
+          <Key>
+            <PropertyRef Name="KINDNO" />
+          </Key>
+          <Property Name="KINDNO" Type="varchar" MaxLength="4" Nullable="false" />
+          <Property Name="SID" Type="varchar" MaxLength="4" />
+          <Property Name="KINDNAME" Type="varchar" MaxLength="20" />
+          <Property Name="PAY2" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="PAY3" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="PAY4" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="PAYT" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="PAYA" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="PAYS" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="BONUS2" Type="decimal" Precision="12" Scale="2" />
+          <Property Name="BONUS3" Type="decimal" Precision="12" Scale="2" />
+          <Property Name="BONUS4" Type="decimal" Precision="12" Scale="2" />
+          <Property Name="BONUST" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="BONUSA" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="NUMCOUNT" Type="int" />
+          <Property Name="BINCOUNT" Type="int" />
+          <Property Name="PAYSM2" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="PAYSM3" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="PAYSM" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="BONUSSM2" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="BONUSSM" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="BONUSSM3" Type="decimal" Precision="10" Scale="2" />
+        </EntityType>
+        <EntityContainer Name="UnderBingoModelStoreContainer">
+          <EntitySet Name="BINKIND" EntityType="Self.BINKIND" Schema="dbo" store:Type="Tables" />
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="UnderBingoModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="BINKIND">
+          <Key>
+            <PropertyRef Name="KINDNO" />
+          </Key>
+          <Property Name="KINDNO" Type="String" MaxLength="4" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="SID" Type="String" MaxLength="4" FixedLength="false" Unicode="false" />
+          <Property Name="KINDNAME" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="PAY2" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="PAY3" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="PAY4" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="PAYT" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="PAYA" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="PAYS" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="BONUS2" Type="Decimal" Precision="12" Scale="2" />
+          <Property Name="BONUS3" Type="Decimal" Precision="12" Scale="2" />
+          <Property Name="BONUS4" Type="Decimal" Precision="12" Scale="2" />
+          <Property Name="BONUST" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="BONUSA" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="NUMCOUNT" Type="Int32" />
+          <Property Name="BINCOUNT" Type="Int32" />
+          <Property Name="PAYSM2" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="PAYSM3" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="PAYSM" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="BONUSSM2" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="BONUSSM" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="BONUSSM3" Type="Decimal" Precision="10" Scale="2" />
+        </EntityType>
+        <EntityContainer Name="UnderBingoEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="BINKINDs" EntityType="Self.BINKIND" />
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="UnderBingoModelStoreContainer" CdmEntityContainer="UnderBingoEntities">
+          <EntitySetMapping Name="BINKINDs">
+            <EntityTypeMapping TypeName="UnderBingoModel.BINKIND">
+              <MappingFragment StoreEntitySet="BINKIND">
+                <ScalarProperty Name="KINDNO" ColumnName="KINDNO" />
+                <ScalarProperty Name="SID" ColumnName="SID" />
+                <ScalarProperty Name="KINDNAME" ColumnName="KINDNAME" />
+                <ScalarProperty Name="PAY2" ColumnName="PAY2" />
+                <ScalarProperty Name="PAY3" ColumnName="PAY3" />
+                <ScalarProperty Name="PAY4" ColumnName="PAY4" />
+                <ScalarProperty Name="PAYT" ColumnName="PAYT" />
+                <ScalarProperty Name="PAYA" ColumnName="PAYA" />
+                <ScalarProperty Name="PAYS" ColumnName="PAYS" />
+                <ScalarProperty Name="BONUS2" ColumnName="BONUS2" />
+                <ScalarProperty Name="BONUS3" ColumnName="BONUS3" />
+                <ScalarProperty Name="BONUS4" ColumnName="BONUS4" />
+                <ScalarProperty Name="BONUST" ColumnName="BONUST" />
+                <ScalarProperty Name="BONUSA" ColumnName="BONUSA" />
+                <ScalarProperty Name="NUMCOUNT" ColumnName="NUMCOUNT" />
+                <ScalarProperty Name="BINCOUNT" ColumnName="BINCOUNT" />
+                <ScalarProperty Name="PAYSM2" ColumnName="PAYSM2" />
+                <ScalarProperty Name="PAYSM3" ColumnName="PAYSM3" />
+                <ScalarProperty Name="PAYSM" ColumnName="PAYSM" />
+                <ScalarProperty Name="BONUSSM2" ColumnName="BONUSSM2" />
+                <ScalarProperty Name="BONUSSM" ColumnName="BONUSSM" />
+                <ScalarProperty Name="BONUSSM3" ColumnName="BONUSSM3" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="true" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

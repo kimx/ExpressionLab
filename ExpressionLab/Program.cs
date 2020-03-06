@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExpressionLab.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -398,34 +399,94 @@ namespace ExpressionLab
     {
         static void Main(string[] args)
         {
-            DbContextMock db = new DbContextMock();
-            IQueryable<ProductInfo> result = from p in db.Product
-                                             join c in db.Category
-                                                 on p.CategoryId equals c.CategoryId
-                                             select new ProductInfo
-                                             {
-                                                 CategoryName = c.CategoryName,
-                                                 CreateDate = p.CreateDate,
-                                                 OnSaled = p.OnSaled,
-                                                 Price = p.Price,
-                                                 ProductId = p.ProductId,
-                                                 ProductName = p.ProductName,
-                                                 Qty = p.Qty,
+            //DbContextMock db = new DbContextMock();
+            //IQueryable<ProductInfo> result = from p in db.Product
+            //                                 join c in db.Category
+            //                                     on p.CategoryId equals c.CategoryId
+            //                                 select new ProductInfo
+            //                                 {
+            //                                     CategoryName = c.CategoryName,
+            //                                     CreateDate = p.CreateDate,
+            //                                     OnSaled = p.OnSaled,
+            //                                     Price = p.Price,
+            //                                     ProductId = p.ProductId,
+            //                                     ProductName = p.ProductName,
+            //                                     Qty = p.Qty,
 
-                                             };
+            //                                 };
 
-            result = result.SelectDynamicProxy("CategoryName", "ProductName");
-            foreach (var item in result)
+            //result = result.SelectDynamicProxy("CategoryName", "ProductName");
+            //foreach (var item in result)
+            //{
+            //    ProductInfo p = (ProductInfo)item;
+            //    Console.WriteLine("CategoryName:" + item.CategoryName);
+            //    Console.WriteLine("ProductName:" + item.ProductName);
+            //}
+            Console.WriteLine("begin");
+            var query = NullAssigneLab().ToList();
+            foreach (var item in query)
             {
-                ProductInfo p = (ProductInfo)item;
-                Console.WriteLine("CategoryName:" + item.CategoryName);
-                Console.WriteLine("ProductName:" + item.ProductName);
+                Console.WriteLine(item.CategoryName);
+                Console.WriteLine(item.ProductName);
             }
-
+            Console.WriteLine("end");
             Console.Read();
         }
 
+        #region Null AssigneLab
+        private static IQueryable<ProductInfo> NullAssigneLab()
+        {
+            Models.UnderBingoEntities db = new Models.UnderBingoEntities();
+            var source = from r in db.BINKINDs select r;
+            //傳入參數 如:m
+            ParameterExpression parSource = Expression.Parameter(typeof(BINKIND), "m");
+            Type targetType = typeof(ProductInfo);
+            //目標型別的建構式
+            var ctor = Expression.New(targetType);
+            List<MemberAssignment> assignment = new List<MemberAssignment>();
+
+            assignment.Add(GetMemberAssignment(parSource, source.ElementType, "KINDNO", targetType, "CategoryName"));
+            assignment.Add(GetMemberAssignment(parSource, source.ElementType, "null", targetType, "RetailPrice"));
+            //將目標型別的成員初始化 例:new ProductTargetModel(){CategoryName=m.CategoryName,...}
+            var memberInit = Expression.MemberInit(ctor, assignment.ToArray());
+
+            //建立Lamba運算式 例: m => new ProductTargetModel(){CategoryName=m.CategoryName,...}
+            Expression body = Expression.Lambda<Func<BINKIND, ProductInfo>>(memberInit, new ParameterExpression[] { parSource });
+            //呼叫Select方法
+            MethodCallExpression selectExpression = Expression.Call(
+                            typeof(Queryable),//來源型別
+                            "Select",//指定方法名稱
+                            new Type[] { typeof(BINKIND), typeof(ProductInfo) },//body lamba使用到Expression型別，例:pe及回傳型別
+                            source.Expression,//來源運算式
+                            body);
+            var result = (IQueryable<ProductInfo>)source.Provider.CreateQuery(selectExpression);
+            return result;
+        }
+
+
+        private static MemberAssignment GetMemberAssignment(ParameterExpression parSource, Type sourceType, string sourceColumn, Type targetType, string targeColumn)
+        {
+            //來源屬性
+            var sourceValueProperty = sourceType.GetProperty(sourceColumn);
+            //目標屬性
+            var targetValueProperty = targetType.GetProperty(targeColumn);
+            //建立參數與欄位節點 如:m.CategoryName
+            Expression columnExp = null;
+            if (sourceValueProperty != null)
+                columnExp = Expression.Property(parSource, sourceValueProperty);
+            else
+            {
+                columnExp = Expression.Constant(null, targetValueProperty.PropertyType);
+            }
+            //建立成員指定節點 如:CategoryName=m.CategoryName
+
+            var displayValueAssignment = Expression.Bind(targetValueProperty, columnExp);
+            return displayValueAssignment;
+        }
+        #endregion
     }
+
+
 
     public static class DynamicQueryExtension
     {
@@ -484,7 +545,7 @@ namespace ExpressionLab
         /// <returns></returns>
         public static object CreateDynamicProxy(Type typeNeedProxy)
         {
-           
+
             //定義動態組件
             AssemblyName assembly = new AssemblyName("DynamicAssembly");
             AssemblyBuilderAccess assemblyBuilderAccess = AssemblyBuilderAccess.Run;
@@ -614,7 +675,10 @@ namespace ExpressionLab
 
         public bool OnSaled { get; set; }
 
+        public decimal? RetailPrice { get; set; }
+
     }
+
 
     #endregion
 

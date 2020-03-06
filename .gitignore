@@ -213,3 +213,5 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+/.vs/ExpressionLab/v16/Server/sqlite3
+/packages/EntityFramework.6.2.0
